@@ -6,15 +6,21 @@ import { useSearchParams } from "next/navigation";
 import ReactMarkdown from "react-markdown";
 
 // Import script to interact with Nebula API
-import { createSession, queryContract, handleUserMessage, executeCommand } from "../../../scripts/Nebula.mjs";
+import {
+  createSession,
+  queryContract,
+  handleUserMessage,
+  executeCommand,
+} from "../../../scripts/Nebula.mjs";
 
 import { useActiveAccount } from "thirdweb/react";
 
-
-import { sendAndConfirmTransaction, prepareTransaction, defineChain } from "thirdweb";
-import { client } from "../client"
-
-
+import {
+  sendAndConfirmTransaction,
+  prepareTransaction,
+  defineChain,
+} from "thirdweb";
+import { client } from "../client";
 
 export function BlockchainExplorer() {
   const searchParams = useSearchParams();
@@ -22,7 +28,9 @@ export function BlockchainExplorer() {
   const contractAddress = searchParams.get("searchTerm");
 
   const [sessionId, setSessionId] = useState<string | null>(null);
-  const [messages, setMessages] = useState<{ role: string; content: string }[]>([]);
+  const [messages, setMessages] = useState<{ role: string; content: string }[]>(
+    []
+  );
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
 
@@ -38,16 +46,29 @@ export function BlockchainExplorer() {
         // Simulate typing animation
         setIsTyping(true);
 
-        const contractDetails = await queryContract(contractAddress!, chainId!, newSessionId);
+        const contractDetails = await queryContract(
+          contractAddress!,
+          chainId!,
+          newSessionId
+        );
         setMessages([
           { role: "system", content: "Welcome to the Blockchain Explorer." },
-          { role: "system", content: contractDetails || "No details available for this contract." },
+          {
+            role: "system",
+            content:
+              contractDetails || "No details available for this contract.",
+          },
         ]);
 
         setIsTyping(false);
       } catch (error) {
         console.error("Error creating session or querying contract:", error);
-        setMessages([{ role: "system", content: "Failed to load contract details. Please try again." }]);
+        setMessages([
+          {
+            role: "system",
+            content: "Failed to load contract details. Please try again.",
+          },
+        ]);
         setIsTyping(false);
       }
     };
@@ -64,14 +85,22 @@ export function BlockchainExplorer() {
 
     try {
       setIsTyping(true);
-      const response = await handleUserMessage(userMessage, sessionId, chainId, contractAddress);
+      const response = await handleUserMessage(
+        userMessage,
+        sessionId,
+        chainId,
+        contractAddress
+      );
       setMessages((prev) => [...prev, { role: "system", content: response }]);
       setIsTyping(false);
     } catch (error) {
       console.error("Error handling user message:", error);
       setMessages((prev) => [
         ...prev,
-        { role: "system", content: "Failed to process your query. Please try again." },
+        {
+          role: "system",
+          content: "Failed to process your query. Please try again.",
+        },
       ]);
       setIsTyping(false);
     }
@@ -96,11 +125,14 @@ export function BlockchainExplorer() {
         "default-user", // Optional user ID
         false, // Stream option
         chainId,
-        contractAddress
+        contractAddress,
+        sessionId
       );
 
       // Check if the response contains actions and a transaction to sign
-      const action = executeResponse.actions?.find((a: { type: string; data: string }) => a.type === "sign_transaction");
+      const action = executeResponse.actions?.find(
+        (a: { type: string; data: string }) => a.type === "sign_transaction"
+      );
 
       if (action) {
         const transactionData = JSON.parse(action.data); // Parse the transaction data
@@ -131,7 +163,10 @@ export function BlockchainExplorer() {
       } else {
         setMessages((prev) => [
           ...prev,
-          { role: "system", content: "No transaction to sign in the response." },
+          {
+            role: "system",
+            content: "No transaction to sign in the response.",
+          },
         ]);
       }
 
@@ -140,7 +175,10 @@ export function BlockchainExplorer() {
       console.error("Error executing transaction:", error);
       setMessages((prev) => [
         ...prev,
-        { role: "system", content: "Failed to execute the command. Please try again." },
+        {
+          role: "system",
+          content: "Failed to execute the command. Please try again.",
+        },
       ]);
       setIsTyping(false);
     }
@@ -156,7 +194,12 @@ export function BlockchainExplorer() {
         </div>
         <div className="flex-grow bg-white rounded-lg shadow-md p-4 mb-4 overflow-y-auto">
           {messages.map((message, index) => (
-            <div key={index} className={`mb-2 ${message.role === "user" ? "text-right" : "text-left"}`}>
+            <div
+              key={index}
+              className={`mb-2 ${
+                message.role === "user" ? "text-right" : "text-left"
+              }`}
+            >
               {message.role === "system" ? (
                 <div className="bg-gray-200 text-gray-800 rounded-lg p-2">
                   <ReactMarkdown>{message.content}</ReactMarkdown>
